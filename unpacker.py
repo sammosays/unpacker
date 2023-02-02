@@ -48,8 +48,8 @@ def publish_event(event):
         channel = connection.channel()
         channel.basic_publish(PUBLISH_EXCHANGE,
                               PUBLISH_ROUTING_KEY,
-                              event,
-                              pika.BasicProperties(content_type='text/plain',
+                              json.dumps(event),
+                              pika.BasicProperties(content_type='text/json',
                                                    delivery_mode=pika.DeliveryMode.Transient))
         print(f'published event to exchange [{PUBLISH_EXCHANGE}] routing key: [{PUBLISH_ROUTING_KEY}]')
         connection.close()
