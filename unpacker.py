@@ -25,7 +25,7 @@ def load_env_var(name):
 MINIO_ACCESS_TOKEN = load_env_var(MINIO_TOKEN_ENV_VAR)
 MINIO_ACCESS_SECRET = load_env_var(MINIO_SECRET_ENV_VAR)
 
-s3 = boto3.resource(
+s3 = boto3.client(
     's3',
     endpoint_url='https://minio:9000',
     aws_access_key_id=MINIO_ACCESS_TOKEN,
@@ -41,7 +41,8 @@ def callback_download(ch, method, properties, body):
         for record in event['Records']:
             bucket = record['s3']['bucket']['name']
             key = record['s3']['object']['key']
-            obj = s3.get_object(Bucket=bucket, Key=key)
+            global s3
+            obj = s3.get_object(Bucket=bucket, Key=key).read()
             print(f'{obj}')
 
 
