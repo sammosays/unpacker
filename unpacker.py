@@ -9,7 +9,7 @@ import sys
 
 MINIO_TOKEN_ENV_VAR = 'MINIO_ACCESS_TOKEN'
 MINIO_SECRET_ENV_VAR = 'MINIO_ACCESS_SECRET'
-MINIO_URL = 'https://minio-service:9000'
+MINIO_URL = 'http://minio-service:9000'
 NOTIFY_RECEIVE_QUEUE = 'unpacker-queue'
 NOTIFY_SEND_QUEUE = ''
 
