@@ -14,7 +14,8 @@ MINIO_TOKEN_ENV_VAR = 'MINIO_ACCESS_TOKEN'
 MINIO_SECRET_ENV_VAR = 'MINIO_ACCESS_SECRET'
 MINIO_URL = 'http://minio-service:9000'
 NOTIFY_RECEIVE_QUEUE = 'unpacker-queue'
-NOTIFY_SEND_QUEUE = ''
+PUBLISH_EXCHANGE = 'dw'
+PUBLISH_ROUTING_KEY = 'formatter-queue'
 UNPACKED_BUCKET = 'unpacked'
 
 
@@ -39,6 +40,23 @@ s3 = boto3.client(
 )
 
 
+def publish_event(event):
+    global PUBLISH_EXCHANGE
+    global PUBLISH_ROUTING_KEY
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+        channel = connection.channel()
+        channel.basic_publish(PUBLISH_EXCHANGE,
+                              PUBLISH_ROUTING_KEY,
+                              event,
+                              pika.BasicProperties(content_type='text/plain',
+                                                   delivery_mode=pika.DeliveryMode.Transient))
+        print(f'published event to exchange [{PUBLISH_EXCHANGE}] routing key: [{PUBLISH_ROUTING_KEY}]')
+        connection.close()
+    except Exception as e:
+        print(f'failed to publish event to broker - {event} - {e}')
+
+
 def callback(ch, method, properties, body):
     global s3
     global UNPACKED_BUCKET
@@ -58,15 +76,18 @@ def callback(ch, method, properties, body):
                 # download object as a zip
                 obj = s3.get_object(Bucket=bucket, Key=key)
                 zip_file = ZipFile(io.BytesIO(obj['Body'].read()))
+                print(f'downloaded {key} from {bucket}')
 
                 # unzip each file in memory
                 unpacked = []
                 for file_name in zip_file.namelist():
                     file = zip_file.open(file_name).read()
+                    print(f'extracted {file_name} from zip {key}')
 
                     # post file to minio and add to record
                     s3.put_object(Body=file, Bucket=UNPACKED_BUCKET, Key=file_name)
                     unpacked.append({'key': file_name, 'bucket': UNPACKED_BUCKET})
+                    print(f'posted {file_name} to bucket {UNPACKED_BUCKET}')
 
                 # update event
                 record['unpacked'] = unpacked
@@ -75,12 +96,9 @@ def callback(ch, method, properties, body):
             except Exception as e:
                 print(f'error processing key [{key}] from bucket [{bucket}] - {e}')
 
-        # post event to rabbit
+        # publish event to rabbit
         event['Records'] = records
-
-
-
-
+        publish_event(event)
 
 
 def main():
