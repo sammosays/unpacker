@@ -3,9 +3,11 @@
 import boto3
 import pika
 
+import io
 import json
 import os
 import sys
+from zipfile import ZipFile
 
 MINIO_TOKEN_ENV_VAR = 'MINIO_ACCESS_TOKEN'
 MINIO_SECRET_ENV_VAR = 'MINIO_ACCESS_SECRET'
@@ -35,6 +37,12 @@ s3 = boto3.client(
 )
 
 
+def unzip(zip_archive, file_name):
+    zip_file = ZipFile(io.BytesIO(zip_archive['Body'].read()))
+    file = zip_file.open(file_name).read()
+    print(f'{file}')
+
+
 def callback_download(ch, method, properties, body):
     print(f'received: {body}')
     event = json.loads(body.decode())
@@ -43,8 +51,10 @@ def callback_download(ch, method, properties, body):
             bucket = record['s3']['bucket']['name']
             key = record['s3']['object']['key']
             global s3
-            obj = s3.get_object(Bucket=bucket, Key=key)['Body'].read()
-            print(f'{obj}')
+            obj = s3.get_object(Bucket=bucket, Key=key)
+            unzip(obj, key)
+
+
 
 
 def main():
