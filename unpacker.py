@@ -9,6 +9,7 @@ import sys
 
 MINIO_TOKEN_ENV_VAR = 'MINIO_ACCESS_TOKEN'
 MINIO_SECRET_ENV_VAR = 'MINIO_ACCESS_SECRET'
+MINIO_URL = 'https://minio-service:9000'
 NOTIFY_RECEIVE_QUEUE = 'unpacker-queue'
 NOTIFY_SEND_QUEUE = ''
 
@@ -27,7 +28,7 @@ MINIO_ACCESS_SECRET = load_env_var(MINIO_SECRET_ENV_VAR)
 
 s3 = boto3.client(
     's3',
-    endpoint_url='https://minio:9000',
+    endpoint_url=MINIO_URL,
     aws_access_key_id=MINIO_ACCESS_TOKEN,
     aws_secret_access_key=MINIO_ACCESS_SECRET,
     verify=False
