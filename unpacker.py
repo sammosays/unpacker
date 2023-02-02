@@ -43,7 +43,7 @@ def callback_download(ch, method, properties, body):
             bucket = record['s3']['bucket']['name']
             key = record['s3']['object']['key']
             global s3
-            obj = s3.get_object(Bucket=bucket, Key=key)
+            obj = s3.get_object(Bucket=bucket, Key=key)['Body'].read()
             print(f'{obj}')
 
 
