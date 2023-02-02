@@ -7,6 +7,7 @@ import io
 import json
 import os
 import sys
+import uuid
 from zipfile import ZipFile
 
 
@@ -86,7 +87,7 @@ def callback(ch, method, properties, body):
 
                     # post file to minio and add to record
                     s3.put_object(Body=file, Bucket=UNPACKED_BUCKET, Key=file_name)
-                    unpacked.append({'key': file_name, 'bucket': UNPACKED_BUCKET})
+                    unpacked.append({'id': str(uuid.uuid4()), 'key': file_name, 'bucket': UNPACKED_BUCKET})
                     print(f'posted {file_name} to bucket {UNPACKED_BUCKET}')
 
                 # update event
