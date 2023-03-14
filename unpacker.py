@@ -49,7 +49,8 @@ def publish_event(event):
     global PUBLISH_EXCHANGE
     global PUBLISH_ROUTING_KEY
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+        credentials = pika.PlainCredentials(RABBIT_USER, RABBIT_PASS)
+        connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', credentials=credentials))
         channel = connection.channel()
         channel.basic_publish(PUBLISH_EXCHANGE,
                               PUBLISH_ROUTING_KEY,
