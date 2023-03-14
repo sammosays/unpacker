@@ -17,6 +17,8 @@ MINIO_URL = 'http://minio-service:9000'
 NOTIFY_RECEIVE_QUEUE = 'unpacker-queue'
 PUBLISH_EXCHANGE = 'dw'
 PUBLISH_ROUTING_KEY = 'formatter-queue'
+RABBIT_USER_ENV_VAR = "RABBIT_USER"
+RABBIT_PASS_ENV_VAR = "RABBIT_PASS"
 UNPACKED_BUCKET = 'unpacked'
 
 
@@ -31,6 +33,8 @@ def load_env_var(name):
 
 MINIO_ACCESS_TOKEN = load_env_var(MINIO_TOKEN_ENV_VAR)
 MINIO_ACCESS_SECRET = load_env_var(MINIO_SECRET_ENV_VAR)
+RABBIT_USER = load_env_var(RABBIT_USER_ENV_VAR)
+RABBIT_PASS = load_env_var(RABBIT_PASS_ENV_VAR)
 
 s3 = boto3.client(
     's3',
@@ -103,7 +107,8 @@ def callback(ch, method, properties, body):
 
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+    credentials = pika.PlainCredentials(RABBIT_USER, RABBIT_PASS)
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', credentials=credentials))
     channel = connection.channel()
     channel.queue_declare(queue=NOTIFY_RECEIVE_QUEUE)
     channel.basic_consume(queue=NOTIFY_RECEIVE_QUEUE,
